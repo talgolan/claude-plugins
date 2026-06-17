@@ -1,0 +1,32 @@
+{
+  "name": "talgolan",
+  "owner": {
+    "name": "Tal Golan"
+  },
+  "plugins": [
+    {
+      "name": "smoke-test-plugin",
+      "source": {
+        "source": "github",
+        "repo": "talgolan/smoke-test-plugin"
+      },
+      "description": "Scaffold an executable smoke-test framework into any project. /smoke-init bootstraps the framework + first runner; /smoke-add adds runners; /smoke-sync refreshes the shared lib."
+    },
+    {
+      "name": "session-continuity",
+      "source": {
+        "source": "github",
+        "repo": "talgolan/session-continuity"
+      },
+      "description": "Cross-session project memory via .session-continuity/SESSION_PRIMER.md + LEARNINGS.md, with fire-before-action hooks."
+    },
+    {
+      "name": "memory-audit-plugin",
+      "source": {
+        "source": "github",
+        "repo": "talgolan/memory-audit-plugin"
+      },
+      "description": "Audit a Claude Code project memory dir for rot (dangling pointers, orphans, unresolved links, DONE archive candidates, oversize index) and propose approval-gated fixes. One slash command: /memory-audit."
+    }
+  ]
+}
