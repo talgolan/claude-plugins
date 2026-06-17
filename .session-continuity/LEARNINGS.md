@@ -1,5 +1,35 @@
 # Learnings — claude-plugins migration
 
+## 0. Same-session `/plugin marketplace remove` + re-`add` leaves a stale in-memory plugin index → installs fail with "not found"
+
+**Symptom:** Phase E on host. `/plugin marketplace remove talgolan` then
+`/plugin marketplace add talgolan/claude-plugins` both succeeded. Then
+`/plugin install smoke-test-plugin@talgolan` → "Plugin smoke-test-plugin not
+found in marketplace talgolan". Same for memory-audit-plugin.
+`/plugin marketplace update talgolan` did NOT fix it.
+
+**What was verified correct on disk (ruled out as cause):**
+- `marketplace.json` schema matches official docs exactly: per-plugin
+  `"source": {"source": "github", "repo": "owner/repo"}` is the correct form.
+- `claude plugin validate .` passes (only a missing-description warning).
+- Cached `~/.claude/plugins/marketplaces/talgolan/.claude-plugin/marketplace.json`
+  is byte-identical to repo HEAD, lists all 3 plugin names exactly.
+- `known_marketplaces.json` talgolan → `talgolan/claude-plugins`, freshly fetched.
+- Plugin sub-repos reachable (`git ls-remote` OK).
+- The 374KB `plugin-catalog-cache.json` is the unrelated *official discover*
+  catalog (has `models`, official plugins) — never holds a user marketplace; red herring.
+
+**Cause:** The running CC session rebuilt the on-disk marketplace cache but did
+not rebuild its in-memory marketplace→plugin index for the re-added name.
+
+**Fix:** Restart Claude Code, then `/plugin install <name>@talgolan`. (Unverified
+this session — left for next session; if it still fails fresh, it's a genuine CC
+bug with re-added marketplaces, not a repo-side problem.)
+
+**Lesson:** When repointing a marketplace, prefer restarting CC over
+remove+re-add within one session. If you must do it live and installs 404,
+restart before assuming the catalog is broken.
+
 ## 1. A plugin clone may be checked out on a non-default branch — verify before `git rm` of catalog files
 
 **Symptom:** Ran `git rm .claude-plugin/marketplace.json` + commit + push in

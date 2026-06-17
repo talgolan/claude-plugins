@@ -19,22 +19,30 @@ Phases A–D + dir rename DONE. Phase E pending (HOST-ONLY). Phase F pending.
 | B | publish `talgolan/memory-audit-plugin`, in-repo marketplace.json removed | ✅ done |
 | C | remove `talgolan/session-continuity` in-repo marketplace.json (on **main**) | ✅ done |
 | D | rename `smoke-test-skill`→`smoke-test-plugin` (repo+plugin.json+pkg+bun.lock+README), drop marketplace.json, 67 tests pass, local dir renamed | ✅ done |
-| E | repoint HOST itb install: remove old `talgolan` mkt, add `talgolan/claude-plugins`, reinstall plugins | ⏳ **HOST-ONLY — do on host CC session** |
+| E | repoint HOST itb install: remove old `talgolan` mkt, add `talgolan/claude-plugins`, reinstall plugins | ⚠️ **PARTIAL — marketplace repointed, installs BLOCKED, see below** |
 | F | update itb prose refs `smoke-test-skill`→`smoke-test-plugin` | ⏳ pending (non-blocking) |
 
 ## Outstanding items
 
-1. **Phase E (host)** — the host `talgolan` marketplace is still sourced from
-   `talgolan/smoke-test-skill` (renamed; its marketplace.json deleted, so it
-   will fail on refresh). On the HOST Claude Code session run:
+1. **Phase E (host) — BLOCKED on install, NEEDS SESSION RESTART.**
+   Done on host: `/plugin marketplace remove talgolan` then
+   `/plugin marketplace add talgolan/claude-plugins` succeeded. known_marketplaces
+   `talgolan` now → `talgolan/claude-plugins`, cache fetched, marketplace.json on
+   disk byte-identical to repo HEAD, all 3 plugin names present.
+   BUT `/plugin install smoke-test-plugin@talgolan` and `memory-audit-plugin@talgolan`
+   both return **"Plugin X not found in marketplace talgolan"** — even after
+   `/plugin marketplace update talgolan`. Disk state fully verified correct
+   (schema matches docs, repos reachable, names exact). Root cause: stale
+   in-memory marketplace index in the running session after same-session
+   remove+re-add. **FIX: restart host Claude Code, then run:**
    ```
-   /plugin marketplace remove talgolan
-   /plugin marketplace add talgolan/claude-plugins
    /plugin install smoke-test-plugin@talgolan
    /plugin install memory-audit-plugin@talgolan
    ```
-   Do NOT reinstall session-continuity under talgolan — it's installed from its
-   own `talgolan/session-continuity` marketplace and stays there.
+   If it STILL fails on a fresh session → real CC bug with re-added marketplaces;
+   nothing fixable from the repo side (disk state is correct). See LEARNINGS #2-ish.
+   Do NOT reinstall session-continuity under talgolan — installed from its own
+   `talgolan/session-continuity` marketplace, stays there.
 2. **Phase F** — prose/memory mentions of `smoke-test-skill` in itb docs +
    project memory dir (see runbook Phase F list). Non-blocking accuracy fixes.
 3. Local dir `smoke-test-skill` was renamed to `smoke-test-plugin` in the
